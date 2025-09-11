@@ -8,23 +8,22 @@ from ..logic.piece_manager import PieceManager
 from ..graphics.ui import Button, draw_text
 import copy
 
-game_over = False
 running = True
+game_over = False
 board_renderer = None
 piece_renderer = None
 board = None
 piece_manager = None
-
 
 # ADICIONADO: Variáveis para o sistema de pontuação e nível
 score = 0
 level = 0
 total_lines_cleared = 0
 points_map = {
-    1: 40,
-    2: 100,
-    3: 300,
-    4: 1200
+    1: 100,
+    2: 300,
+    3: 500,
+    4: 1000
 }
 last_move_times = {"left": 0, "right": 0, "down": 0}
 keys = {"left": False, "right": False, "down": False, "rotate": False, "hold": False}
@@ -142,6 +141,7 @@ def update(value=0):
     
     # Renderiza o tabuleiro e a peça
     piece_renderer.render(current_piece, offset_x=current_piece.x, offset_y=current_piece.y)
+    render_held_piece() 
     board_renderer.render()
 
     # NOVO: Renderiza a UI (Pontuação e Nível)
@@ -150,11 +150,35 @@ def update(value=0):
     draw_text(f"Score: {score}", 320, 500)
     draw_text(f"Level: {level}", 320, 470)
     draw_text(f"Lines: {total_lines_cleared}", 320, 440)
+    draw_text("HOLD", 320, 400)
+
     restore_projection()
 
     glutSwapBuffers()
     glutTimerFunc(16, update, 0)
 
+def render_held_piece():
+    held_piece = piece_manager.get_held_piece()    
+    setup_2d_projection()
+    glPushMatrix()
+    glTranslatef(330, 290, 0)
+    glScalef(20, 20, 1)
+    glLineWidth(2)
+    glColor3ub(255, 255, 255)  # branco
+    glBegin(GL_LINE_LOOP)
+    glVertex2f(-0.5, -0.5)
+    glVertex2f(4.5, -0.5)
+    glVertex2f(4.5, 4.5)
+    glVertex2f(-0.5, 4.5)
+    glEnd()
+    
+    if held_piece is not None:
+        temp = copy.deepcopy(held_piece)
+        temp.shape = held_piece.original_shape
+        piece_renderer.render(temp,0.5,0.5)
+    glPopMatrix()
+    
+    restore_projection()
 
 def reshape(width, height):
     # essa função ficou simples, a projeção é controlada no loop de update

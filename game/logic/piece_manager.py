@@ -10,7 +10,6 @@ class PieceManager:
 
         #pega a primeira peça da sacola embaralhada
         self.next_piece_name = self.initial_bag.pop()
-        
         self.current_piece = None  
         self.held_piece = None
         self.has_swapped = False
@@ -53,4 +52,5 @@ class PieceManager:
     
     def get_next_piece_name(self):
         return self.next_piece_name
-
+    def get_held_piece(self):
+        return self.held_piece
