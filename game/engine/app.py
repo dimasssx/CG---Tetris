@@ -34,7 +34,7 @@ start_time = 0
 elapsed_time = 0
 
 last_move_times = {"left": 0, "right": 0, "down": 0}
-keys = {"left": False, "right": False, "down": False, "rotate": False, "hold": False}
+keys = {"left": False, "right": False, "down": False, "rotate": False, "hold": False,"hard_drop": False}
 DROP_INTERVAL_BASE = 500 # A velocidade inicial é ajustada pelo o nivel 
 MOVE_INTERVAL = 150 
 
@@ -52,6 +52,7 @@ def keyboard(key, x, y):
     elif key == "s": keys["down"] = True
     elif key == "w": keys["rotate"] = True
     elif key == "c": keys["hold"] = True
+    elif key == " ": keys["hard_drop"] = True
     elif key == "r": restart_game()
     elif key == "\x1b": glutLeaveMainLoop()
 
@@ -75,9 +76,30 @@ def update(value=0):
     from time import time
     current_piece = piece_manager.get_current_piece()
     now = int(time() * 1000)
+    
     if keys["hold"]:
         piece_manager.hold_piece()
         keys["hold"] = False
+    
+    if keys["hard_drop"]:
+        final_y = calculate_ghost_piece_y(current_piece)
+        score += 10
+        current_piece.y = final_y
+        lines_cleared_now = board.lock_piece(current_piece)
+        if lines_cleared_now > 0:
+            score += points_map.get(lines_cleared_now, 0) * (level + 1)
+            total_lines_cleared += lines_cleared_now
+            level = total_lines_cleared // 10
+        piece_manager.spawn_piece()
+        piece_manager.has_swapped = False
+
+        new_piece = piece_manager.get_current_piece()
+        if not board.is_valid_position(new_piece):
+            game_over_func()
+            return 
+
+        last_drop_time = now
+        keys["hard_drop"] = False
 
     for direction in ["left", "right", "down"]:
         if keys[direction] and now - last_move_times[direction] > MOVE_INTERVAL:
