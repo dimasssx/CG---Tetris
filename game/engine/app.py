@@ -8,12 +8,13 @@ from ..logic.piece_manager import PieceManager
 from ..graphics.ui import Button, draw_text
 import copy
 
-
+game_over = False
 running = True
 board_renderer = None
 piece_renderer = None
 board = None
 piece_manager = None
+
 
 # ADICIONADO: Variáveis para o sistema de pontuação e nível
 score = 0
@@ -25,9 +26,11 @@ points_map = {
     3: 300,
     4: 1200
 }
-
+last_move_times = {"left": 0, "right": 0, "down": 0}
 keys = {"left": False, "right": False, "down": False, "rotate": False, "hold": False}
 DROP_INTERVAL_BASE = 500 # A velocidade inicial é ajustada pelo o nivel 
+MOVE_INTERVAL = 150 
+
 last_drop_time = 0
 
 play_button = None
@@ -42,6 +45,7 @@ def keyboard(key, x, y):
     elif key == "s": keys["down"] = True
     elif key == "w": keys["rotate"] = True
     elif key == "c": keys["hold"] = True
+    elif key == "r": restart_game()
     elif key == "\x1b": sys.exit()
 
 def keyboard_up(key, x, y):
@@ -52,19 +56,28 @@ def keyboard_up(key, x, y):
     elif key == "s": keys["down"] = False
     elif key == "w": keys["rotate"] = False
 
+
 def update(value=0):
-    global last_drop_time, score, level, total_lines_cleared
+
+    global last_drop_time, score, level, total_lines_cleared,last_move_times
     from time import time
     current_piece = piece_manager.get_current_piece()
     now = int(time() * 1000)
     if keys["hold"]:
         piece_manager.hold_piece()
         keys["hold"] = False
-    if keys["left"] and board.is_valid_position(current_piece, adj_x=-1): current_piece.x -= 1
-    if keys["right"] and board.is_valid_position(current_piece, adj_x=1): current_piece.x += 1
-    if keys["down"] and board.is_valid_position(current_piece, adj_y=1): 
-        current_piece.y += 1
-        score += 1 #add ponto por soft drop
+
+    for direction in ["left", "right", "down"]:
+        if keys[direction] and now - last_move_times[direction] > MOVE_INTERVAL:
+            if direction == "left" and board.is_valid_position(current_piece, adj_x=-1):
+                current_piece.x -= 1
+            elif direction == "right" and board.is_valid_position(current_piece, adj_x=1):
+                current_piece.x += 1
+            elif direction == "down" and board.is_valid_position(current_piece, adj_y=1):
+                current_piece.y += 1
+                score += 1 #add ponto por soft drop
+            last_move_times[direction] = now
+
     
     if keys["rotate"]:
         pivot_row, pivot_col = current_piece.pivot
@@ -109,6 +122,12 @@ def update(value=0):
                     print(f"LEVEL UP! Nível: {level}")
             piece_manager.spawn_piece()
             piece_manager.has_swapped = False
+
+            new_piece = piece_manager.get_current_piece()
+            if not board.is_valid_position(new_piece):
+                game_over_func()  # ativa game over
+                return
+
         last_drop_time = now
 
     #render
@@ -235,6 +254,34 @@ def main():
     glutPassiveMotionFunc(mouse_hover_menu)
     
     glutMainLoop()
+
+def game_over_func():
+    global game_over
+    game_over = True
+    glutKeyboardFunc(keyboard)
+    glutDisplayFunc(display_gameover)
+    glutPostRedisplay()
+
+def display_gameover():
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+    setup_2d_projection()
+    draw_text("GAME OVER", 100, 350)
+    draw_text("R para reiniciar", 80, 280)
+    draw_text("ESC para sair", 90, 240)
+    restore_projection()
+    glutSwapBuffers()
+
+def restart_game():
+    global board, piece_manager, game_over, last_drop_time
+    if not game_over:
+        return
+    board = Board(width=10, height=20)
+    piece_manager = PieceManager()
+    piece_manager.spawn_piece()
+    board_renderer.board = board  # reaproveita renderer
+    game_over = False
+    last_drop_time = 0
+    glutTimerFunc(0, update, 0)
 
 if __name__ == "__main__":
     main()
