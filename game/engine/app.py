@@ -30,6 +30,7 @@ def keyboard(key, x, y):
     elif key == "d": keys["right"] = True
     elif key == "s": keys["down"] = True
     elif key == "w": keys["rotate"] = True
+    elif key == "c": keys["hold"] = True
     elif key == "\x1b": sys.exit()
 
 def keyboard_up(key, x, y):
@@ -45,15 +46,34 @@ def update(value=0):
     from time import time
     current_piece = piece_manager.get_current_piece()
     now = int(time() * 1000)
-
+    if keys["hold"]:
+        piece_manager.hold_piece()
+        keys["hold"] = False
     if keys["left"] and board.is_valid_position(current_piece, adj_x=-1): current_piece.x -= 1
     if keys["right"] and board.is_valid_position(current_piece, adj_x=1): current_piece.x += 1
     if keys["down"] and board.is_valid_position(current_piece, adj_y=1): current_piece.y += 1
     
     if keys["rotate"]:
-        current_piece.rotate_clockwise()
-        if not board.is_valid_position(current_piece):
-          current_piece.rotate_counterclockwise()
+        pivot_row, pivot_col = current_piece.pivot
+        old_pivot_world_x = current_piece.x + pivot_col
+        old_pivot_world_y = current_piece.y + pivot_row
+
+        temp_piece = copy.deepcopy(current_piece)
+        temp_piece.rotate_clockwise()
+        
+        new_pivot_row, new_pivot_col = temp_piece.pivot
+        temp_piece.x = old_pivot_world_x - new_pivot_col
+        temp_piece.y = old_pivot_world_y - new_pivot_row
+        
+        kick_tests = [(0, 0), (-1, 0), (1, 0)]
+
+        for adj_x, adj_y in kick_tests:
+            if board.is_valid_position(temp_piece, adj_x=adj_x, adj_y=adj_y):
+                current_piece.shape = temp_piece.shape
+                current_piece.x = temp_piece.x + adj_x
+                current_piece.y = temp_piece.y + adj_y
+                break
+
         keys["rotate"] = False
 
     if now - last_drop_time > DROP_INTERVAL:
