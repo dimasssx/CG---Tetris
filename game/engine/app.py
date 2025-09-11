@@ -6,14 +6,17 @@ from ..graphics.renderer import BoardRenderer, PieceRenderer
 from ..logic.board import Board
 from ..logic.piece_manager import PieceManager
 from ..graphics.ui import Button, draw_text
+import copy
+
 
 running = True
 board_renderer = None
 piece_renderer = None
 board = None
 piece_manager = None
-keys = {"left": False, "right": False, "down": False, "rotate": False}
-DROP_INTERVAL = 500
+
+keys = {"left": False, "right": False, "down": False, "rotate": False, "hold": False}
+DROP_INTERVAL = 500  
 last_drop_time = 0
 
 play_button = None
@@ -59,6 +62,7 @@ def update(value=0):
         else:
             board.lock_piece(current_piece)
             piece_manager.spawn_piece()
+            piece_manager.has_swapped = False
         last_drop_time = now
 
     #render
