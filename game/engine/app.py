@@ -272,7 +272,7 @@ def display_gameover():
     glutSwapBuffers()
 
 def restart_game():
-    global board, piece_manager, game_over, last_drop_time
+    global board, piece_manager, game_over, last_drop_time,score,level,lines
     if not game_over:
         return
     board = Board(width=10, height=20)
@@ -281,6 +281,9 @@ def restart_game():
     board_renderer.board = board  # reaproveita renderer
     game_over = False
     last_drop_time = 0
+    score = 0
+    level = 0
+    lines = 0
     glutTimerFunc(0, update, 0)
 
 if __name__ == "__main__":
