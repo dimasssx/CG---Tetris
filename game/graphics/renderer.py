@@ -10,7 +10,8 @@ class BoardRenderer:
                 if cell:  
                     self.draw_cube(x, y, cell)
                 else:    
-                    self.draw_cube(x, y, self.board.color)
+                    board_Color = 0,0,0
+                    self.draw_cube(x, y, board_Color)
 
     def draw_cube(self, x, y, color):
         glColor3ub(*color)          
@@ -19,6 +20,15 @@ class BoardRenderer:
         glVertex2f(x + 1, y)          
         glVertex2f(x + 1, y + 1)      
         glVertex2f(x, y + 1)          
+        glEnd()
+           # Borda branca
+        glColor3ub(82, 82, 82)
+        glLineWidth(1.5)
+        glBegin(GL_LINE_LOOP)
+        glVertex2f(x, y)
+        glVertex2f(x + 1, y)
+        glVertex2f(x + 1, y + 1)
+        glVertex2f(x, y + 1)
         glEnd()
     
 class PieceRenderer:
@@ -31,6 +41,15 @@ class PieceRenderer:
     def draw_cube(self, x, y, color):
         glColor3ub(*color)
         glBegin(GL_QUADS)
+        glVertex2f(x, y)
+        glVertex2f(x + 1, y)
+        glVertex2f(x + 1, y + 1)
+        glVertex2f(x, y + 1)
+        glEnd()
+           # Borda branca
+        glColor3ub(50, 50, 50)
+        glLineWidth(1.5)
+        glBegin(GL_LINE_LOOP)
         glVertex2f(x, y)
         glVertex2f(x + 1, y)
         glVertex2f(x + 1, y + 1)
