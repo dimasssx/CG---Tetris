@@ -46,7 +46,7 @@ def keyboard(key, x, y):
     elif key == "w": keys["rotate"] = True
     elif key == "c": keys["hold"] = True
     elif key == "r": restart_game()
-    elif key == "\x1b": sys.exit()
+    elif key == "\x1b": glutLeaveMainLoop()
 
 def keyboard_up(key, x, y):
     global keys
@@ -75,7 +75,6 @@ def update(value=0):
                 current_piece.x += 1
             elif direction == "down" and board.is_valid_position(current_piece, adj_y=1):
                 current_piece.y += 1
-                score += 1 #add ponto por soft drop
             last_move_times[direction] = now
 
     
@@ -109,12 +108,13 @@ def update(value=0):
     if now - last_drop_time > drop_interval:
         if board.is_valid_position(current_piece, adj_y=1):
             current_piece.y += 1
+            score += 1 #pontos por queda manual
         else:
             # NOVO: Lógica de pontuação e nível
             lines_cleared_now = board.lock_piece(current_piece)
             if lines_cleared_now > 0:
                 # Calcula a pontuação
-                score += points_map[lines_cleared_now] * (level + 1)
+                score += lines_cleared_now * 100
                 total_lines_cleared += lines_cleared_now
                 # Verifica se o jogador subiu de nível (a cada 10 linhas)
                 if total_lines_cleared // 10 > level:
@@ -184,7 +184,7 @@ def display_menu():
     """Desenha a tela de menu."""
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
     setup_2d_projection()
-    draw_text("UFAPE TETRIS", 150, 450)
+    draw_text("UFAPE TETRIS", 170, 450)
     play_button.draw()
     quit_button.draw()
     restore_projection()
