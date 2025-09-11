@@ -15,13 +15,24 @@ piece_renderer = None
 board = None
 piece_manager = None
 
+# ADICIONADO: Variáveis para o sistema de pontuação e nível
+score = 0
+level = 0
+total_lines_cleared = 0
+points_map = {
+    1: 40,
+    2: 100,
+    3: 300,
+    4: 1200
+}
+
 keys = {"left": False, "right": False, "down": False, "rotate": False, "hold": False}
-DROP_INTERVAL = 500  
+DROP_INTERVAL_BASE = 500 # A velocidade inicial é ajustada pelo o nivel 
 last_drop_time = 0
 
 play_button = None
 quit_button = None
-window_size = (300, 600)
+window_size = (450, 600)
 
 def keyboard(key, x, y):
     global keys
@@ -42,7 +53,7 @@ def keyboard_up(key, x, y):
     elif key == "w": keys["rotate"] = False
 
 def update(value=0):
-    global last_drop_time
+    global last_drop_time, score, level, total_lines_cleared
     from time import time
     current_piece = piece_manager.get_current_piece()
     now = int(time() * 1000)
@@ -51,7 +62,9 @@ def update(value=0):
         keys["hold"] = False
     if keys["left"] and board.is_valid_position(current_piece, adj_x=-1): current_piece.x -= 1
     if keys["right"] and board.is_valid_position(current_piece, adj_x=1): current_piece.x += 1
-    if keys["down"] and board.is_valid_position(current_piece, adj_y=1): current_piece.y += 1
+    if keys["down"] and board.is_valid_position(current_piece, adj_y=1): 
+        current_piece.y += 1
+        score += 1 #add ponto por soft drop
     
     if keys["rotate"]:
         pivot_row, pivot_col = current_piece.pivot
@@ -76,28 +89,57 @@ def update(value=0):
 
         keys["rotate"] = False
 
-    if now - last_drop_time > DROP_INTERVAL:
+    # NOVO: Calcula o intervalo de queda com base no nível atual
+    # A velocidade aumenta em 50ms a cada nível, com um mínimo de 50ms.
+    drop_interval = max(50, DROP_INTERVAL_BASE - (level * 50))
+
+    if now - last_drop_time > drop_interval:
         if board.is_valid_position(current_piece, adj_y=1):
             current_piece.y += 1
         else:
-            board.lock_piece(current_piece)
+            # NOVO: Lógica de pontuação e nível
+            lines_cleared_now = board.lock_piece(current_piece)
+            if lines_cleared_now > 0:
+                # Calcula a pontuação
+                score += points_map[lines_cleared_now] * (level + 1)
+                total_lines_cleared += lines_cleared_now
+                # Verifica se o jogador subiu de nível (a cada 10 linhas)
+                if total_lines_cleared // 10 > level:
+                    level = total_lines_cleared // 10
+                    print(f"LEVEL UP! Nível: {level}")
             piece_manager.spawn_piece()
             piece_manager.has_swapped = False
         last_drop_time = now
 
     #render
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+    # MODIFICADO: Define a matriz de projeção para o jogo
+    glMatrixMode(GL_PROJECTION)
+    glLoadIdentity()
+    # A área de jogo agora vai de -150 a 300 para termos espaço à direita
+    glOrtho(0, 15, 20, 0, -1, 1) 
+    glMatrixMode(GL_MODELVIEW)
+    glLoadIdentity()
+    
+    # Renderiza o tabuleiro e a peça
     piece_renderer.render(current_piece, offset_x=current_piece.x, offset_y=current_piece.y)
     board_renderer.render()
+
+    # NOVO: Renderiza a UI (Pontuação e Nível)
+    setup_2d_projection()
+    draw_text("UFAPE TETRIS", 320, 550)
+    draw_text(f"Score: {score}", 320, 500)
+    draw_text(f"Level: {level}", 320, 470)
+    draw_text(f"Lines: {total_lines_cleared}", 320, 440)
+    restore_projection()
+
     glutSwapBuffers()
     glutTimerFunc(16, update, 0)
 
+
 def reshape(width, height):
+    # essa função ficou simples, a projeção é controlada no loop de update
     glViewport(0, 0, width, height)
-    glMatrixMode(GL_PROJECTION)
-    glLoadIdentity()
-    glOrtho(0, board.width, board.height, 0, -1, 1)
-    glMatrixMode(GL_MODELVIEW)
 
 
 #funcoes do menu
@@ -123,7 +165,7 @@ def display_menu():
     """Desenha a tela de menu."""
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
     setup_2d_projection()
-    draw_text("UFAPE TETRIS", 100, 450)
+    draw_text("UFAPE TETRIS", 150, 450)
     play_button.draw()
     quit_button.draw()
     restore_projection()
@@ -171,13 +213,14 @@ def main():
     
     glutInit(sys.argv)
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH)
-    glutInitWindowSize(300, 600)
+    glutInitWindowSize(window_size[0], window_size[1])
     glutCreateWindow(b"UFAPE Tetris")
     glEnable(GL_DEPTH_TEST)
     glClearColor(0.1, 0.1, 0.1, 1.0)
 
-    play_button = Button(x=75, y=300, width=150, height=50, text="Play Game")
-    quit_button = Button(x=75, y=220, width=150, height=50, text="Quit")
+    #ALTERADO: posição dos botões ajustado para nova largura
+    play_button = Button(x=150, y=300, width=150, height=50, text="Play Game")
+    quit_button = Button(x=150, y=220, width=150, height=50, text="Quit")
 
     # Prepara os objetos do jogo, mas não inicia o loop ainda
     board = Board(width=10, height=20)
