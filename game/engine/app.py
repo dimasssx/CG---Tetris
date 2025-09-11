@@ -157,6 +157,7 @@ def update(value=0):
     #renderiza o tabuleiro e a peça
     piece_renderer.render(current_piece, offset_x=current_piece.x, offset_y=current_piece.y)
     render_next_piece_preview()
+    render_held_piece()
     board_renderer.render()
 
     #renderiza a UI (Pontuação e Nível)
@@ -165,12 +166,39 @@ def update(value=0):
     draw_text(f"Score: {score}", 320, 500)
     draw_text(f"Level: {level}", 320, 470)
     draw_text(f"Lines: {total_lines_cleared}", 320, 440)
-    draw_text("HOLD", 320, 400)
+    draw_text("HOLD", 320, 405)
+    draw_text("NEXT", 320, 275)
 
     restore_projection()
 
     glutSwapBuffers()
     glutTimerFunc(16, update, 0)
+
+def render_held_piece():
+    held_piece = piece_manager.get_held_piece()
+    setup_2d_projection()
+    glPushMatrix()
+    # Posição para a caixa do "Hold"
+    glTranslatef(330, 305, 0) 
+    glScalef(20, 20, 1)
+    glLineWidth(2)
+    glColor3ub(255, 255, 255)  # Cor da caixa: branco
+    glBegin(GL_LINE_LOOP)
+    glVertex2f(-0.5, -0.5)
+    glVertex2f(4.5, -0.5)
+    glVertex2f(4.5, 4.5)
+    glVertex2f(-0.5, 4.5)
+    glEnd()
+
+    # Renderiza a peça dentro da caixa
+    if held_piece is not None:
+        temp = copy.deepcopy(held_piece)
+        temp.shape = held_piece.original_shape
+        piece_renderer.render(temp, 0.5, 0.5)
+
+    glPopMatrix()
+    restore_projection()
+
 
 def render_next_piece_preview():
     next_piece_name = piece_manager.get_next_piece_name()
@@ -178,7 +206,7 @@ def render_next_piece_preview():
         next_piece = Piece(next_piece_name)
         setup_2d_projection()
         glPushMatrix()
-        glTranslatef(330, 290, 0)
+        glTranslatef(330, 180, 0)
         glScalef(20, 20, 1)
         glLineWidth(2)
         glColor3ub(255, 255, 255)  # branco
