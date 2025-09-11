@@ -1,5 +1,5 @@
 import random
-from game.logic.piece import Piece
+from .piece import Piece
 from ..utils.constants import TETROMINOES
 
 class PieceManager:

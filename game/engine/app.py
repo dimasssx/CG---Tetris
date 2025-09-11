@@ -6,6 +6,7 @@ from ..graphics.renderer import BoardRenderer, PieceRenderer
 from ..logic.board import Board
 from ..logic.piece_manager import PieceManager
 from ..graphics.ui import Button, draw_text
+from ..logic.piece import Piece
 import copy
 
 running = True
@@ -14,6 +15,7 @@ board_renderer = None
 piece_renderer = None
 board = None
 piece_manager = None
+
 
 # ADICIONADO: Variáveis para o sistema de pontuação e nível
 score = 0
@@ -55,6 +57,11 @@ def keyboard_up(key, x, y):
     elif key == "s": keys["down"] = False
     elif key == "w": keys["rotate"] = False
 
+def calculate_ghost_piece_y(current_piece):
+    ghost_y = current_piece.y
+    while board.is_valid_position(current_piece, adj_y=ghost_y - current_piece.y + 1):
+        ghost_y += 1
+    return ghost_y
 
 def update(value=0):
 
@@ -134,14 +141,16 @@ def update(value=0):
     # MODIFICADO: Define a matriz de projeção para o jogo
     glMatrixMode(GL_PROJECTION)
     glLoadIdentity()
-    # A área de jogo agora vai de -150 a 300 para termos espaço à direita
     glOrtho(0, 15, 20, 0, -1, 1) 
     glMatrixMode(GL_MODELVIEW)
     glLoadIdentity()
-    
+
+    ghost_y = calculate_ghost_piece_y(current_piece)
+    piece_renderer.render_ghost(current_piece, offset_x=current_piece.x, offset_y=ghost_y)
+
     # Renderiza o tabuleiro e a peça
     piece_renderer.render(current_piece, offset_x=current_piece.x, offset_y=current_piece.y)
-    render_held_piece() 
+    render_next_piece_preview()
     board_renderer.render()
 
     # NOVO: Renderiza a UI (Pontuação e Nível)
@@ -157,28 +166,31 @@ def update(value=0):
     glutSwapBuffers()
     glutTimerFunc(16, update, 0)
 
-def render_held_piece():
-    held_piece = piece_manager.get_held_piece()    
-    setup_2d_projection()
-    glPushMatrix()
-    glTranslatef(330, 290, 0)
-    glScalef(20, 20, 1)
-    glLineWidth(2)
-    glColor3ub(255, 255, 255)  # branco
-    glBegin(GL_LINE_LOOP)
-    glVertex2f(-0.5, -0.5)
-    glVertex2f(4.5, -0.5)
-    glVertex2f(4.5, 4.5)
-    glVertex2f(-0.5, 4.5)
-    glEnd()
-    
-    if held_piece is not None:
-        temp = copy.deepcopy(held_piece)
-        temp.shape = held_piece.original_shape
+def render_next_piece_preview():
+    next_piece_name = piece_manager.get_next_piece_name()
+    if next_piece_name:
+        next_piece = Piece(next_piece_name)
+        setup_2d_projection()
+        glPushMatrix()
+        glTranslatef(330, 290, 0)
+        glScalef(20, 20, 1)
+        glLineWidth(2)
+        glColor3ub(255, 255, 255)  # branco
+        glBegin(GL_LINE_LOOP)
+        glVertex2f(-0.5, -0.5)
+        glVertex2f(4.5, -0.5)
+        glVertex2f(4.5, 4.5)
+        glVertex2f(-0.5, 4.5)
+        glEnd()
+
+        temp = copy.deepcopy(next_piece)
+        temp.shape = next_piece.original_shape
+        
         piece_renderer.render(temp,0.5,0.5)
-    glPopMatrix()
-    
-    restore_projection()
+        glPopMatrix()
+
+        restore_projection()
+
 
 def reshape(width, height):
     # essa função ficou simples, a projeção é controlada no loop de update
