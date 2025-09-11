@@ -7,6 +7,7 @@ from ..logic.board import Board
 from ..logic.piece_manager import PieceManager
 from ..graphics.ui import Button, draw_text
 from ..logic.piece import Piece
+from time import time
 import copy
 
 running = True
@@ -17,7 +18,7 @@ board = None
 piece_manager = None
 
 
-# ADICIONADO: Variáveis para o sistema de pontuação e nível
+#variáveis para o sistema de pontuação e nível
 score = 0
 level = 0
 total_lines_cleared = 0
@@ -27,6 +28,11 @@ points_map = {
     3: 500,
     4: 1000
 }
+
+#variaveis de tempo
+start_time = 0
+elapsed_time = 0
+
 last_move_times = {"left": 0, "right": 0, "down": 0}
 keys = {"left": False, "right": False, "down": False, "rotate": False, "hold": False}
 DROP_INTERVAL_BASE = 500 # A velocidade inicial é ajustada pelo o nivel 
@@ -107,8 +113,8 @@ def update(value=0):
 
         keys["rotate"] = False
 
-    # NOVO: Calcula o intervalo de queda com base no nível atual
-    # A velocidade aumenta em 50ms a cada nível, com um mínimo de 50ms.
+    #calcula o intervalo de queda com base no nivel atual
+    #a velocidade aumenta em 50ms a cada nivel, com um minimo de 50ms.
     drop_interval = max(50, DROP_INTERVAL_BASE - (level * 50))
 
     if now - last_drop_time > drop_interval:
@@ -116,13 +122,13 @@ def update(value=0):
             current_piece.y += 1
             score += 1 #pontos por queda manual
         else:
-            # NOVO: Lógica de pontuação e nível
+            #logica de pontuação e nivel
             lines_cleared_now = board.lock_piece(current_piece)
             if lines_cleared_now > 0:
-                # Calcula a pontuação
+                #calcula a pontuação
                 score += lines_cleared_now * 100
                 total_lines_cleared += lines_cleared_now
-                # Verifica se o jogador subiu de nível (a cada 10 linhas)
+                #verifica se o jogador subiu de nivel (a cada 10 linhas)
                 if total_lines_cleared // 10 > level:
                     level = total_lines_cleared // 10
                     print(f"LEVEL UP! Nível: {level}")
@@ -138,7 +144,7 @@ def update(value=0):
 
     #render
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-    # MODIFICADO: Define a matriz de projeção para o jogo
+    #define a matriz de projeção para o jogo
     glMatrixMode(GL_PROJECTION)
     glLoadIdentity()
     glOrtho(0, 15, 20, 0, -1, 1) 
@@ -148,12 +154,12 @@ def update(value=0):
     ghost_y = calculate_ghost_piece_y(current_piece)
     piece_renderer.render_ghost(current_piece, offset_x=current_piece.x, offset_y=ghost_y)
 
-    # Renderiza o tabuleiro e a peça
+    #renderiza o tabuleiro e a peça
     piece_renderer.render(current_piece, offset_x=current_piece.x, offset_y=current_piece.y)
     render_next_piece_preview()
     board_renderer.render()
 
-    # NOVO: Renderiza a UI (Pontuação e Nível)
+    #renderiza a UI (Pontuação e Nível)
     setup_2d_projection()
     draw_text("UFAPE TETRIS", 320, 550)
     draw_text(f"Score: {score}", 320, 500)
@@ -193,12 +199,11 @@ def render_next_piece_preview():
 
 
 def reshape(width, height):
-    # essa função ficou simples, a projeção é controlada no loop de update
+    #essa função ficou simples, a projeção é controlada no loop de update
     glViewport(0, 0, width, height)
 
 
 #funcoes do menu
-
 def setup_2d_projection():
     glMatrixMode(GL_PROJECTION)
     glPushMatrix()
@@ -244,8 +249,12 @@ def mouse_hover_menu(x, y):
 
 def start_game():
     """Esta função faz a transição do menu para o jogo."""
+    global start_time
     print("Iniciando o jogo...")
     # Registra as suas funções originais do jogo
+
+    start_time = time()
+
     glutDisplayFunc(update)
     glutReshapeFunc(reshape)
     glutKeyboardFunc(keyboard)
@@ -292,8 +301,13 @@ def main():
     glutMainLoop()
 
 def game_over_func():
-    global game_over
+    global game_over, elapsed_time
     game_over = True
+
+    #para o cronômetro e calcula o tempo total 
+    end_time = time()
+    elapsed_time = end_time - start_time
+
     glutKeyboardFunc(keyboard)
     glutDisplayFunc(display_gameover)
     glutPostRedisplay()
@@ -301,9 +315,18 @@ def game_over_func():
 def display_gameover():
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
     setup_2d_projection()
-    draw_text("GAME OVER", 100, 350)
-    draw_text("R para reiniciar", 80, 280)
-    draw_text("ESC para sair", 90, 240)
+
+    window_width = window_size[0] #largura da janela 
+    window_height = window_size[1] #altura da janela
+    
+    draw_text("GAME OVER", (window_width / 2) - 60, window_height - 200, color=(255, 69, 0))
+
+    draw_text(f"Pontuacao Final: {score}", (window_width / 2) - 100, window_height - 250, color=(0, 255, 255))
+    draw_text(f"Tempo: {elapsed_time:.2f} segundos", (window_width / 2) - 100, window_height - 280, color=(0, 255, 255))
+
+    draw_text("R para reiniciar", (window_width / 2) - 90, window_height - 350, color=(255, 255, 0))
+    draw_text("ESC para sair", (window_width / 2) - 80, window_height - 380, color=(255, 255, 0))
+
     restore_projection()
     glutSwapBuffers()
 
@@ -314,12 +337,17 @@ def restart_game():
     board = Board(width=10, height=20)
     piece_manager = PieceManager()
     piece_manager.spawn_piece()
-    board_renderer.board = board  # reaproveita renderer
+    board_renderer.board = board  #reaproveita renderer
     game_over = False
     last_drop_time = 0
     score = 0
     level = 0
-    lines = 0
+    total_lines_cleared = 0
+
+    #reinicia o cronômetro
+    start_time = time()
+    
+    glutDisplayFunc(update)
     glutTimerFunc(0, update, 0)
 
 if __name__ == "__main__":

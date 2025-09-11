@@ -2,9 +2,10 @@
 from OpenGL.GL import *
 from OpenGL.GLUT import *
 
-def draw_text(text, x, y, font=GLUT_BITMAP_9_BY_15):
+def draw_text(text, x, y, font=GLUT_BITMAP_9_BY_15, color=(255, 255, 255)): # <-- Adicionado 'color' com valor padrão
     """Desenha texto na tela em coordenadas de pixel."""
-    glColor3f(1.0, 1.0, 1.0)
+    #converte RGB para OpenGL
+    glColor3f(color[0]/255.0, color[1]/255.0, color[2]/255.0)
     glRasterPos2f(x, y)
     for character in text:
         glutBitmapCharacter(font, ord(character))
