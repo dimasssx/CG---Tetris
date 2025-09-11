@@ -32,7 +32,8 @@ class Board:
                     y = piece.y + i
                     if y >= 0:
                         self.grid[y][x] = piece.color
-        self.clear_lines()
+        # MODIFICADO: Agora, lock_piece retorna o número de linhas limpas.
+        return self.clear_lines()
 
     def clear_lines(self):
         new_grid = [row for row in self.grid if not all(cell is not None for cell in row)]
@@ -40,4 +41,6 @@ class Board:
         for _ in range(lines_cleared):
             new_grid.insert(0, [None for _ in range(self.width)])
         self.grid = new_grid
+         # ADICIONADO: Retorna o número de linhas que foram limpas para calcular pontos.
+        return lines_cleared
 
