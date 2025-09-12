@@ -2,8 +2,6 @@
 
 Um clássico jogo Tetris desenvolvido em Python utilizando a biblioteca PyOpenGL para renderização. Este projeto foi criado como parte dos requisitos da disciplina de Computação Gráfica.
 
-![Screenshot do Jogo](./screenshot.png)
-
 ## Funcionalidades Implementadas
 
 * **Tela de Início Interativa:** Menu principal com botões para iniciar e sair do jogo.
@@ -27,7 +25,7 @@ Siga os passos abaixo para configurar e executar o jogo no seu computador.
 1.  **Clone o Repositório**
     Abra um terminal e clone o projeto usando Git:
     ```bash
-    git clone ```
+    git clone https://github.com/dimasssx/CG---Tetris.git
 
 2.  **Navegue até a Pasta**
     ```bash
