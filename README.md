@@ -61,8 +61,7 @@ Siga os passos abaixo para configurar e executar o jogo no seu computador.
 
 ## Autores
 
-* José Portela
-* Pedro Tobias 
-* Dimas Celestino
-* Joaci Laurindo
-* Augusto Jorge
+* **Dimas Celestino** - [@dimasssx](https://github.com/dimasssx)
+* **José Portela** - [@portel4neto](https://github.com/portel4neto)
+* **Pedro Tobias** - [@TobiasPedro1](https://github.com/TobiasPedro1)
+* **Joaci Laurindo** - [@joacif](https://github.com/joacif)
