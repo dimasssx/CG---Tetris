@@ -200,11 +200,11 @@ def render_held_piece():
     held_piece = piece_manager.get_held_piece()
     setup_2d_projection()
     glPushMatrix()
-    # Posição para a caixa do "Hold"
+    #posição para a caixa do "Hold"
     glTranslatef(330, 305, 0) 
     glScalef(20, 20, 1)
     glLineWidth(2)
-    glColor3ub(255, 255, 255)  # Cor da caixa: branco
+    glColor3ub(255, 255, 255) 
     glBegin(GL_LINE_LOOP)
     glVertex2f(-0.5, -0.5)
     glVertex2f(4.5, -0.5)
@@ -212,7 +212,7 @@ def render_held_piece():
     glVertex2f(-0.5, 4.5)
     glEnd()
 
-    # Renderiza a peça dentro da caixa
+    #renderiza a peça dentro da caixa
     if held_piece is not None:
         temp = copy.deepcopy(held_piece)
         temp.shape = held_piece.original_shape
@@ -301,7 +301,7 @@ def start_game():
     """Esta função faz a transição do menu para o jogo."""
     global start_time
     print("Iniciando o jogo...")
-    # Registra as suas funções originais do jogo
+    #registra as suas funções originais do jogo
 
     start_time = time()
 
@@ -310,13 +310,13 @@ def start_game():
     glutKeyboardFunc(keyboard)
     glutKeyboardUpFunc(keyboard_up)
 
-    # Desativa as funções do menu para não interferirem
+    #desativa as funções do menu para não interferirem
     glutMouseFunc(None)
     glutPassiveMotionFunc(None)
 
     reshape(window_size[0], window_size[1])
     
-    # Inicia o seu game loop pela primeira vez
+    #inicia o seu game loop pela primeira vez
     glutTimerFunc(0, update, 0)
 
 
@@ -332,18 +332,18 @@ def main():
     glEnable(GL_DEPTH_TEST)
     glClearColor(0.1, 0.1, 0.1, 1.0)
 
-    #ALTERADO: posição dos botões ajustado para nova largura
-    play_button = Button(x=150, y=300, width=150, height=50, text="Play Game")
-    quit_button = Button(x=150, y=220, width=150, height=50, text="Quit")
+    #posição dos botões ajustado para nova largura
+    play_button = Button(x=150, y=300, width=150, height=50, text="Iniciar")
+    quit_button = Button(x=150, y=220, width=150, height=50, text="Sair")
 
-    # Prepara os objetos do jogo, mas não inicia o loop ainda
+    #prepara os objetos do jogo, mas não inicia o loop ainda
     board = Board(width=10, height=20)
     piece_manager = PieceManager()
     piece_manager.spawn_piece()
     board_renderer = BoardRenderer(board)
     piece_renderer = PieceRenderer()
 
-    # Inicia o programa registrando APENAS as funções do menu
+    #inicia o programa registrando APENAS as funções do menu
     glutDisplayFunc(display_menu)
     glutMouseFunc(mouse_click_menu)
     glutPassiveMotionFunc(mouse_hover_menu)
@@ -381,7 +381,7 @@ def display_gameover():
     glutSwapBuffers()
 
 def restart_game():
-    global board, piece_manager, game_over, last_drop_time,score,level,lines
+    global board, piece_manager, game_over, last_drop_time, score, level, total_lines_cleared, start_time, elapsed_time
     if not game_over:
         return
     board = Board(width=10, height=20)
@@ -393,6 +393,7 @@ def restart_game():
     score = 0
     level = 0
     total_lines_cleared = 0
+    elapsed_time = 0
 
     #reinicia o cronômetro
     start_time = time()
